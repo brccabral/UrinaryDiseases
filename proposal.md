@@ -39,7 +39,7 @@ The solution for this problem is a classification model with multiple categories
 
 ### Benchmark Model
 The paper in the citation concludes with a strict rule for determining the diagnose. My proposal is different as I am going to create a Neural Network model using PyTorch.
-![{Paper formula}](https://github.com/brccabral/urinary_diseases/paper_formula.png)
+![{Paper formula}](https://github.com/brccabral/UrinaryDiseases/paper_formula.png)
 
 ### Evaluation Metrics
 My Neural Network model can be evaluated using accuracy metric, if the calculated diagnose is the same as the given label.
