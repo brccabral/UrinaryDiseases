@@ -1,3 +1,7 @@
+# Report
+Full report is in file `capstone_report_template.md`.  
+___
+## Readme
 In the iPython Notebook from Sagemaker select the kernel "conda_mxnet_36".  
 The file `urinary_diseases_191.ipynb` is a local implementation of the model using `Torch==1.9.1`. The file `urinary_diseases_110.ipynb` is also a local model but using `Torch==1.10`, but this file is in the project just for analysis, Sagemaker doesn't support it so it can't be deployed.
 
@@ -51,7 +55,7 @@ The dataset is TAB delimited, UTF-16 and doesn't have headers.
 
 The web page was deployed using S3 with static hosting enabled, the file `index.html` is provided. This S3 needs public access policy as in `aws.json`. The lambda function code is provided in `lambda_fn.py`. The API Gateway is deployed with CORS enabled.
 
-
+___
 ### Credit
 The dataset requires to give citation and credit:
 
