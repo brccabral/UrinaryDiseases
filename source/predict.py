@@ -1,8 +1,10 @@
 # import libraries
 import os
 import numpy as np
+import pandas as pd
 import torch
 from six import BytesIO
+from io import StringIO
 
 # import model from model.py, by name
 from model import LinearModelDisease
@@ -42,19 +44,27 @@ def model_fn(model_dir):
 
 # Provided input data loading
 def input_fn(serialized_input_data, content_type):
-    print('Deserializing the input data.')
+    print(f'Deserializing the input data. content_type={content_type}')
     if content_type == NP_CONTENT_TYPE:
         stream = BytesIO(serialized_input_data)
         return np.load(stream)
+    elif content_type == 'text/csv':
+        df = pd.read_csv(StringIO(serialized_input_data), header=None)
+        return df.values
     raise Exception('Requested unsupported ContentType in content_type: ' + content_type)
 
 # Provided output data handling
 def output_fn(prediction_output, accept):
-    print('Serializing the generated output.')
+    print(f'Serializing the generated output. accept={accept}')
     if accept == NP_CONTENT_TYPE:
         stream = BytesIO()
         np.save(stream, prediction_output)
         return stream.getvalue(), accept
+    elif accept == 'text/csv':
+        rows = []
+        for row in prediction_output:
+            rows.append(','.join([str(val) for val in row]))
+        return '\n'.join(rows)
     raise Exception('Requested unsupported ContentType in Accept: ' + accept)
 
 
@@ -65,22 +75,14 @@ def predict_fn(input_data, model):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     # Process input_data so that it is ready to be sent to our model.
-
-    min_t = 35.5
-    max_t = 41.5
-    
-    temp_pred = (input_data[:,0]-min_t)/(max_t-min_t)
-    temp_pred = temp_pred.reshape(-1, 1)
-    x_input = np.concatenate((temp_pred, input_data[:,1:]), axis=1)
-    
-    data = torch.from_numpy(x_input.astype('float32'))
+    data = torch.tensor(input_data.astype('float32'))
     data = data.to(device)
 
     # Put the model into evaluation mode
     model.eval()
-    
-    log_ps = model.forward(data)
-    log_ps = log_ps.cpu().detach().numpy()
-    ps = torch.exp(torch.tensor(log_ps))
 
-    return ps
+    # Compute the result of applying the model to the input data
+    out = model(data)
+    out_np = out.cpu().detach().numpy()
+    
+    return out_np

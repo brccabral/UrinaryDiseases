@@ -13,12 +13,13 @@ class LinearModelDisease(nn.Module):
         self.output_dim = output_dim
 
         self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, output_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim//2)
+        self.fc3 = nn.Linear(hidden_dim//2, output_dim)
         self.dropout = nn.Dropout(0.3)
 
     def forward(self, x):
         x = self.dropout(F.relu(self.fc1(x)))
         x = self.dropout(F.relu(self.fc2(x)))
         x = F.relu(self.fc3(x))
-        return F.log_softmax(x.view(-1, self.output_dim), dim=1)
+
+        return F.softmax(x.view(1, x.shape[0]), dim=1)

@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import argparse
 import json
 import os
@@ -8,6 +10,7 @@ import torch.utils.data
 import torch.nn as nn
 
 from model import LinearModelDisease
+
 
 def model_fn(model_dir):
     """Load the PyTorch model from the `model_dir` directory."""
@@ -23,7 +26,7 @@ def model_fn(model_dir):
 
     # Determine the device and construct the model.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = BinaryClassifier(model_info['input_features'], model_info['hidden_dim'], model_info['output_dim'])
+    model = LinearModelDisease(model_info['input_features'], model_info['hidden_dim'], model_info['output_dim'])
 
     # Load the stored model parameters.
     model_path = os.path.join(model_dir, 'model.pth')
@@ -37,35 +40,37 @@ def model_fn(model_dir):
     return model
 
 
-def _get_train_data_loader(training_dir):
+def _get_train_data_loader(training_dir, batch_size):
     print("Get train data loader.")
 
     train_data = pd.read_csv(os.path.join(training_dir, "train.csv"), header=None, names=None)
 
-    train_y = torch.from_numpy(train_data[[0,1,2,3]].values).float().squeeze()
-    train_x = torch.from_numpy(train_data.drop([0,1,2,3], axis=1).values).float()
+    train_y = torch.from_numpy(train_data[[0]].values).float().squeeze()
+    train_x = torch.from_numpy(train_data.drop([0], axis=1).values).float()
 
-    return train_y, train_x
+    train_ds = torch.utils.data.TensorDataset(train_x, train_y)
+
+    return torch.utils.data.DataLoader(train_ds, batch_size=batch_size)
 
 
-def train(model, train_y, train_x, epochs, loss_fn, optimizer, device, output_dim):
+def train(model, train_loader, epochs, criterion, optimizer, device, output_dim):
     print("Training.")
+    print(torch.__version__)
     for epoch in range(1, epochs + 1):
         model.train()
         total_loss = 0
-        for x, y in zip(train_x, train_y):
+        for x, y in train_loader:
             x = x.to(device)
             y = y.to(device)
             optimizer.zero_grad()
-            log_ps = model.forward(x)
-            ps = torch.exp(log_ps)
-            loss = loss_fn(ps, torch.tensor([y.argmax().item()]).to(device))
+            output = model.forward(x)
+            loss = criterion(output, y.long())
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
         print(f'Epoch: {epoch}',
-        f' Train Loss: {total_loss/train_y.shape[0]:.2f}')
-        
+        f' Train Loss: {total_loss/len(train_loader):.2f}')
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
@@ -76,8 +81,10 @@ if __name__ == '__main__':
     parser.add_argument('--data-dir', type=str, default=os.environ['SM_CHANNEL_TRAIN'])
     
     # training
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--batch-size', type=int, default=3, metavar='N',
+                        help='input batch size for training (default: 3)')
+    parser.add_argument('--epochs', type=int, default=300, metavar='N',
+                        help='number of epochs to train (default: 300)')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     
@@ -98,13 +105,13 @@ if __name__ == '__main__':
 
     torch.manual_seed(args.seed)
 
-    train_y, train_x = _get_train_data_loader(args.data_dir)
+    train_loader = _get_train_data_loader(args.data_dir, args.batch_size)
     
     model = LinearModelDisease(args.input_features, args.hidden_dim, args.output_dim).to(device)
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    loss_fn = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss()
     
-    train(model, train_y, train_x, args.epochs, loss_fn, optimizer, device, args.output_dim)
+    train(model, train_loader, args.epochs, criterion, optimizer, device, args.output_dim)
     
     model_info_path = os.path.join(args.model_dir, 'model_info.pth')
     with open(model_info_path, 'wb') as f:
