@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Urine Analysis Web App</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script>
+        "use strict";
+        function submitForm(oFormElement) {
+            var xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+                console.log(xhr.responseText);
+                var result = xhr.responseText;
+                console.log(result);
+                const resultArray = result.split(",");
+                console.log(resultArray);
+                var maxValue = -9999;
+                resultArray.forEach(value => {
+                    var valueFloat = parseFloat(value);
+                    if (valueFloat > maxValue) {
+                        maxValue = valueFloat;
+                        console.log(maxValue);
+                    }
+                });
+                console.log(maxValue);
+                let index = resultArray.indexOf(maxValue.toString());
+                var resultElement = document.getElementById('result');
+                if (index == 0) {
+                    resultElement.className = 'bg-success';
+                    resultElement.innerHTML = 'No disease';
+                } else if (index == 1) {
+                    resultElement.className = 'bg-danger';
+                    resultElement.innerHTML = 'Nephritis';
+                } else if (index == 2) {
+                    resultElement.className = 'bg-danger';
+                    resultElement.innerHTML = 'Inflammation';
+                } else if (index == 3) {
+                    resultElement.className = 'bg-danger';
+                    resultElement.innerHTML = 'Both Nephritis and Inflammation';
+                } else {
+                    resultElement.className = 'bg-danger';
+                    resultElement.innerHTML = 'Error';
+                }
+            }
+            xhr.open(oFormElement.method, oFormElement.action, true);
+            xhr.setRequestHeader('Access-Control-Allow-Headers', 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token');
+            xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+            xhr.setRequestHeader('Access-Control-Allow-Methods', 'DELETE, POST, GET, OPTIONS');
+            var temperature = document.getElementById('temperature').value;
+            var temperature_scaled = (parseFloat(temperature) - 35.5) / (41.5 - 35.5);
+            var nausea = document.getElementById('nausea').value;
+            var lumbar = document.getElementById('lumbar').value;
+            var pushing = document.getElementById('pushing').value;
+            var micturition = document.getElementById('micturition').value;
+            var burning = document.getElementById('burning').value;
+            var send_data = temperature_scaled.toString() + ',' + nausea + ',' + lumbar + ',' + pushing + ',' + micturition + ',' + burning;
+            console.log(send_data);
+            xhr.send(send_data);
+            return false;
+        }
+    </script>
+    <script>
+        function test() {
+            var result = "23.308706,7.9176884,0.0,0.0";
+            console.log(result);
+            const resultArray = result.split(",");
+            console.log(resultArray);
+            var maxValue = -9999;
+            resultArray.forEach(value => {
+                valueFloat = parseFloat(value);
+                if (valueFloat > maxValue) {
+                    maxValue = valueFloat;
+                    console.log(maxValue);
+                }
+            });
+            console.log(maxValue);
+            let index = resultArray.indexOf(maxValue.toString());
+            console.log(index);
+        }
+    </script>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <form method="POST" action="https://pylnmdd384.execute-api.us-east-1.amazonaws.com/prod"
+            onsubmit="return submitForm(this);">
+            <div>
+                <label for="temperature">Temperature:</label>
+                <input type="text" id="temperature" /> (35.5 to 41.5)
+            </div>
+            <div>
+                <label for="nausea">Occurrence of nausea:</label>
+                <input type="text" id="nausea" /> (1 or 0)
+            </div>
+            <div>
+                <label for="lumbar">Lumbar pain:</label>
+                <input type="text" id="lumbar" /> (1 or 0)
+            </div>
+            <div>
+                <label for="pushing">Urine pushing (continuous need for urination):</label>
+                <input type="text" id="pushing" /> (1 or 0)
+            </div>
+            <div>
+                <label for="micturition">Micturition pains:</label>
+                <input type="text" id="micturition" /> (1 or 0)
+            </div>
+            <div>
+                <label for="burning">Burning of urethra, itch, swelling of urethra outlet:</label>
+                <input type="text" id="burning" /> (1 or 0)
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+        <h1 class="bg-success" id="result"></h1>
+    </div>
+    <!-- <button type="button" onclick="test()">Test</button> -->
+</body>
+
+</html>
