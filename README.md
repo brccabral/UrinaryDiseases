@@ -3,7 +3,8 @@ Full report is in file `capstone_report_template.md`.
 ___
 ## Readme
 In the iPython Notebook from Sagemaker select the kernel "conda_mxnet_36".  
-The file `urinary_diseases_191.ipynb` is a local implementation of the model using `Torch==1.9.1`. The file `urinary_diseases_110.ipynb` is also a local model but using `Torch==1.10`, but this file is in the project just for analysis, Sagemaker doesn't support it so it can't be deployed.
+The file `urinary_diseases_191.ipynb` is a local implementation of the model using `Torch==1.9.1`. The file `urinary_diseases_110.ipynb` is also a local model but using `Torch==1.10`, but this file is in the project just for analysis, Sagemaker doesn't support it so it can't be deployed.  
+And file `aws_project.ipynb` contains the code to create, train, deploy and test the model in Sagemaker.  
 
 The torch version to be used in the project is 1.9.1, as this is supported in Sagemaker.   
 In the iPython Notebook use  
